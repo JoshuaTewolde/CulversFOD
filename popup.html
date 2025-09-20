@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Culver's Flavor of the Day</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            width: 300px;
+            padding: 10px;
+        }
+        #flavorImage {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        #navButtons {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        #locationName {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        /*new*/
+        #locationNav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px; /* spacing between arrows and text */
+            margin-bottom: 10px;
+        }
+
+        #locationNav button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #locationName {
+            font-weight: bold;
+            text-transform: capitalize; /* makes grand-blanc-mi look nicer */
+        }
+    </style>
+</head>
+<body>
+<!--<h2 id="flavorName">Loading...</h2>-->
+<!--<img id="flavorImage" src="" alt="Flavor Image" />-->
+<!--<div id="locationName"></div>-->
+
+<!--<div id="navButtons">-->
+<!--    <button id="prevBtn">&#8592;</button>-->
+<!--    <button id="nextBtn">&#8594;</button>-->
+<!--</div>-->
+
+<div>
+    <h2 id="flavorName">Loading...</h2>
+    <img id="flavorImage" src="" alt="Flavor Image" />
+</div>
+
+<div id="locationNav">
+    <button id="prevBtn">&#8592;</button>
+    <div id="locationName"></div>
+    <button id="nextBtn">&#8594;</button>
+</div>
+
+<p><a href="options.html" target="_blank">&#9881; Settings</a></p>
+
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extension Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        .location-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .location-item button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Culver's Locations</h1>
+<p>Paste the restaurant link (example: <code>https://www.culvers.com/restaurants/grand-blanc-mi</code>)</p>
+
+<input type="text" id="locationInput" placeholder="Paste restaurant link here" style="width:80%">
+<button id="addLocation">Add</button>
+
+<h2>Saved Locations</h2>
+<div id="locationsList"></div>
+
+<script src="options.js"></script>
+</body>
+</html>
