@@ -1,5 +1,6 @@
 let locations = [];
 let currentIndex = 0;
+const flavorCache = new Map(); // url -> { flavorName, flavorImage }
 
 const FOD_IMAGES = {
     "Andes Mint Avalanche": "images/img-Andes-Mint-Avalanche-updated.avif",
@@ -34,39 +35,51 @@ const FOD_IMAGES = {
     "Turtle Dove": "images/img-Turtle-Dove2.avif",
 };
 
+// Normalize legacy string URLs vs new location objects
+function normalizeLocation(item) {
+    if (typeof item === "string") {
+        const slug = item.replace("https://www.culvers.com/restaurants/", "").replace(/\/$/, "");
+        const formatted = slug.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
+        return {
+            slug: slug,
+            name: formatted,
+            url: item.startsWith("http") ? item : `https://www.culvers.com/restaurants/${slug}`
+        };
+    }
+    return item;
+}
 
-// Preload all images at startup --- important to prevent delays
-// const preloadedImages = {};
-// for (const flavor in FOD_IMAGES) {
-//     const img = new Image();
-//     img.src = FOD_IMAGES[flavor];
-//     preloadedImages[flavor] = img;
-// }
-
+// Preload local images
 for (const flavor in FOD_IMAGES) {
     const img = new Image();
     img.src = FOD_IMAGES[flavor];
 }
 
-
-
 document.addEventListener("DOMContentLoaded", async () => {
-    // Load saved locations
     chrome.storage.sync.get({ locations: [] }, async (data) => {
-        locations = data.locations;
+        locations = (data.locations || []).map(normalizeLocation);
+        
         if (locations.length === 0) {
-            document.getElementById("flavorName").textContent = "No locations saved!";
-            document.getElementById("flavorImage").style.display = "none";
-            document.getElementById("locationName").textContent = "Add one in settings.";
+            document.getElementById("locationNav").style.display = "none";
+            document.getElementById("flavorContent").style.display = "none";
+            document.getElementById("popupFooter").style.display = "none";
+            document.getElementById("emptyState").style.display = "flex";
             return;
         }
+
+        document.getElementById("locationNav").style.display = "flex";
+        document.getElementById("flavorContent").style.display = "flex";
+        document.getElementById("popupFooter").style.display = "flex";
+        document.getElementById("emptyState").style.display = "none";
+
+        updateNavButtonsState();
         loadFlavor(currentIndex);
     });
 
-    // Setup nav buttons
     document.getElementById("prevBtn").addEventListener("click", () => {
         if (locations.length > 1) {
             currentIndex = (currentIndex - 1 + locations.length) % locations.length;
+            updateNavButtonsState();
             loadFlavor(currentIndex);
         }
     });
@@ -74,56 +87,99 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("nextBtn").addEventListener("click", () => {
         if (locations.length > 1) {
             currentIndex = (currentIndex + 1) % locations.length;
+            updateNavButtonsState();
             loadFlavor(currentIndex);
         }
     });
 });
 
-async function loadFlavor(index) {
-    const url = locations[index];
-    document.getElementById("locationName").textContent = url.replace("https://www.culvers.com/restaurants/", "");
+function updateNavButtonsState() {
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const countEl = document.getElementById("locationCount");
 
-    // Show temporary "loading" state
+    if (locations.length <= 1) {
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        countEl.textContent = "";
+    } else {
+        prevBtn.disabled = false;
+        nextBtn.disabled = false;
+        countEl.textContent = `${currentIndex + 1} of ${locations.length}`;
+    }
+}
+
+async function loadFlavor(index) {
+    const loc = locations[index];
+    const baseUrl = loc.url || `https://www.culvers.com/restaurants/${loc.slug}`;
+    const slug = loc.slug || baseUrl.replace("https://www.culvers.com/restaurants/", "").replace(/\/$/, "");
+    const calendarUrl = `https://www.culvers.com/restaurants/${slug}?tab=current`;
+    const displayName = loc.name || slug.replace(/-/g, " ");
+
+    document.getElementById("locationName").textContent = displayName;
+    document.getElementById("calendarLink").href = calendarUrl;
+
+    // Check cache
+    if (flavorCache.has(baseUrl)) {
+        const cached = flavorCache.get(baseUrl);
+        renderFlavor(cached.flavorName, cached.flavorImage);
+        return;
+    }
+
+    // Show loading state
     document.getElementById("flavorName").textContent = "Loading...";
-    document.getElementById("flavorImage").src = "";
-    document.getElementById("flavorImage").style.display = "none";
+    const imgEl = document.getElementById("flavorImage");
+    imgEl.style.display = "none";
+    imgEl.src = "";
 
     try {
-        // Fetch HTML
-        const response = await fetch(url);
+        const response = await fetch(baseUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
 
-        // Extract flavor name with regex (Culver's has `<h2 class="Title">Flavor Name</h2>`)
+        // 1. Extract flavor name from HTML
         const flavorMatch = html.match(/<h2[^>]*>(.*?)<\/h2>/i);
-        let flavorName = flavorMatch ? flavorMatch[1].trim() : "Unknown Flavor";
+        let flavorName = flavorMatch ? flavorMatch[1].trim() : "Flavor of the Day";
 
-        // Look up image from our local dictionary
-        const flavorImage = FOD_IMAGES[flavorName] || ""; //used to be FOD_IMAGES but changed to preloaded to prevent delays
+        // Clean HTML entities
+        flavorName = decodeHTMLEntities(flavorName);
 
-        document.getElementById("flavorName").textContent = flavorName;
-        if (flavorImage) {
-            document.getElementById("flavorImage").src = flavorImage;
-            document.getElementById("flavorImage").style.display = "block";
-        } else {
-            document.getElementById("flavorImage").style.display = "none";
+        // 2. Look up image from our local dictionary
+        let flavorImage = FOD_IMAGES[flavorName] || "";
+
+        // Fallback: check if CDN image URL is present in the HTML
+        if (!flavorImage) {
+            const cdnMatch = html.match(/https:\/\/cdn\.culvers\.com\/menu-item-detail\/([^"'\s>]+)/i);
+            if (cdnMatch) {
+                flavorImage = `https://cdn.culvers.com/menu-item-detail/${cdnMatch[1]}`;
+            }
         }
+
+        // Cache result
+        flavorCache.set(baseUrl, { flavorName, flavorImage });
+
+        renderFlavor(flavorName, flavorImage);
 
     } catch (err) {
         console.error("Error loading flavor:", err);
-        document.getElementById("flavorName").textContent = "Error loading flavor.";
+        document.getElementById("flavorName").textContent = "Unable to load flavor";
         document.getElementById("flavorImage").style.display = "none";
     }
 }
 
-function fetchFlavorHTML(url) {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ action: "fetchFlavor", url }, (response) => {
-            if (response.error) {
-                reject(response.error);
-            } else {
-                resolve(response.html);
-            }
-        });
-    });
+function renderFlavor(name, imgSrc) {
+    document.getElementById("flavorName").textContent = name;
+    const imgEl = document.getElementById("flavorImage");
+    if (imgSrc) {
+        imgEl.src = imgSrc;
+        imgEl.style.display = "block";
+    } else {
+        imgEl.style.display = "none";
+    }
 }
 
+function decodeHTMLEntities(text) {
+    const el = document.createElement("textarea");
+    el.innerHTML = text;
+    return el.value;
+}

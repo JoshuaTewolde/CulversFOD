@@ -1,31 +1,488 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Extension Settings</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culver's Flavor of the Day - Settings</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 10px;
+        :root {
+            --primary: #005696;
+            --primary-hover: #004375;
+            --primary-subtle: #f0f6fa;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --danger: #b91c1c;
+            --danger-hover: #991b1b;
+            --danger-bg: #fef2f2;
+            --success-text: #047857;
+            --success-bg: #ecfdf5;
+            --success-border: #a7f3d0;
+            --radius: 8px;
+            --radius-sm: 6px;
         }
-        .location-item {
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 28px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.3px;
+        }
+
+        .header-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 22px;
+            margin-bottom: 22px;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            width: 16px;
+            height: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            outline: none;
+            background: #ffffff;
+            color: var(--text);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 86, 150, 0.12);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border-color: transparent;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-bg);
+            color: var(--danger-hover);
+        }
+
+        .btn-added {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border-color: var(--success-border);
+            cursor: default;
+        }
+
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        .results-container {
+            margin-top: 14px;
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            display: none;
+        }
+
+        .result-item {
             display: flex;
             align-items: center;
-            margin-bottom: 5px;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.1s ease;
         }
-        .location-item button {
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item:hover {
+            background: #f8fafc;
+        }
+
+        .result-info {
+            flex: 1;
+            padding-right: 14px;
+        }
+
+        .result-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .result-address {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .result-flavor-badge {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--primary-subtle);
+            color: var(--primary);
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .saved-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .saved-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            transition: border-color 0.15s, background-color 0.15s, transform 0.15s;
+            cursor: grab;
+        }
+
+        .saved-item:hover {
+            border-color: var(--border-hover);
+        }
+
+        .saved-item.dragging {
+            opacity: 0.4;
+            background: var(--primary-subtle);
+            border-style: dashed;
+            border-color: var(--primary);
+            cursor: grabbing;
+        }
+
+        .saved-item.drag-over {
+            border-top: 2px solid var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .saved-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .drag-handle {
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            padding: 2px;
+            user-select: none;
+        }
+
+        .drag-handle svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .saved-badge {
+            background: #f1f5f9;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 12px;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .saved-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .saved-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .saved-link {
+            font-size: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1px;
+        }
+
+        .saved-link:hover {
+            text-decoration: underline;
+        }
+
+        .saved-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
             margin-left: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 16px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .accordion-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 14px;
+            padding: 2px 0;
+        }
+
+        .accordion-toggle:hover {
+            color: var(--primary);
+        }
+
+        .accordion-content {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.25s ease;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-<h1>Culver's Locations</h1>
-<p>Paste the restaurant link (example: <code>https://www.culvers.com/restaurants/grand-blanc-mi</code>)</p>
 
-<input type="text" id="locationInput" placeholder="Paste restaurant link here" style="width:80%">
-<button id="addLocation">Add</button>
+<div class="container">
+    <header>
+        <h1 class="header-title">Culver's Flavor of the Day</h1>
+        <p class="header-desc">Search and manage your saved restaurant locations.</p>
+    </header>
 
-<h2>Saved Locations</h2>
-<div id="locationsList"></div>
+    <!-- Search Section -->
+    <div class="card">
+        <h2 class="card-title">Find Locations</h2>
+        <p class="card-desc">Search by city, 2-letter state code (e.g., WI, FL), ZIP code, or use your current location.</p>
+        
+        <div class="search-row">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search city, state, or ZIP (e.g. 53703, Orlando, Austin)..." autocomplete="off">
+                <div class="spinner" id="searchSpinner"></div>
+            </div>
+            <button id="geoBtn" class="btn btn-secondary" title="Find nearest Culver's">
+                Use My Location
+            </button>
+        </div>
+
+        <div id="resultsContainer" class="results-container">
+            <div id="resultsList"></div>
+        </div>
+
+        <!-- Manual URL Input Toggle -->
+        <button id="manualToggle" class="accordion-toggle">
+            <span>Direct link input</span>
+        </button>
+        <div id="manualContent" class="accordion-content">
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="manualInput" class="search-input" placeholder="https://www.culvers.com/restaurants/...">
+                <button id="addManualBtn" class="btn btn-primary btn-sm">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Locations Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Saved Locations</h2>
+            <span id="savedCount" style="font-size: 13px; color: var(--text-muted);">(0)</span>
+        </div>
+        <p class="card-desc">Drag and drop to reorder. The first location will be shown by default when opening the extension.</p>
+
+        <div id="savedList" class="saved-list">
+            <!-- Populated dynamically -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            No locations saved yet. Use the search above to add your local Culver's.
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
 
 <script src="options.js"></script>
 </body>

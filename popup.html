@@ -1,74 +1,260 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Culver's Flavor of the Day</title>
     <style>
+        :root {
+            --primary: #005696;
+            --primary-hover: #004070;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            width: 300px;
-            padding: 10px;
-        }
-        #flavorImage {
-            max-width: 100%;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        #navButtons {
-            margin-top: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            width: 310px;
+            min-height: 350px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            user-select: none;
+            overflow-x: hidden;
         }
-        #locationName {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-        /*new*/
-        #locationNav {
+
+        /* Location Navigator Header */
+        .location-nav {
+            background: var(--surface);
+            padding: 10px 12px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 8px; /* spacing between arrows and text */
-            margin-bottom: 10px;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
         }
 
-        #locationNav button {
-            background: none;
-            border: none;
-            font-size: 20px;
+        .nav-btn {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
         }
 
-        #locationName {
-            font-weight: bold;
-            text-transform: capitalize; /* makes grand-blanc-mi look nicer */
+        .nav-btn:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: var(--text);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        .location-info {
+            text-align: center;
+            flex: 1;
+            padding: 0 8px;
+            min-width: 0;
+        }
+
+        .location-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .location-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        /* Main Flavor Content */
+        .main-content {
+            padding: 16px 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .flavor-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .flavor-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.25;
+            margin-bottom: 12px;
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flavor-img-wrapper {
+            width: 210px;
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .flavor-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            transition: transform 0.2s ease;
+        }
+
+        .flavor-img:hover {
+            transform: scale(1.03);
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            text-align: center;
+        }
+
+        .empty-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .empty-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            transition: background 0.15s;
+        }
+
+        .btn-add:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .calendar-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .calendar-link:hover {
+            text-decoration: underline;
+        }
+
+        .settings-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .settings-link:hover {
+            color: var(--text);
         }
     </style>
 </head>
 <body>
-<!--<h2 id="flavorName">Loading...</h2>-->
-<!--<img id="flavorImage" src="" alt="Flavor Image" />-->
-<!--<div id="locationName"></div>-->
 
-<!--<div id="navButtons">-->
-<!--    <button id="prevBtn">&#8592;</button>-->
-<!--    <button id="nextBtn">&#8594;</button>-->
-<!--</div>-->
+    <!-- Location Navigator Header -->
+    <div id="locationNav" class="location-nav">
+        <button id="prevBtn" class="nav-btn" title="Previous Location">◀</button>
+        <div class="location-info">
+            <div id="locationName" class="location-name">Loading...</div>
+            <div id="locationCount" class="location-count"></div>
+        </div>
+        <button id="nextBtn" class="nav-btn" title="Next Location">▶</button>
+    </div>
 
-<div>
-    <h2 id="flavorName">Loading...</h2>
-    <img id="flavorImage" src="" alt="Flavor Image" />
-</div>
+    <!-- Main Flavor Content -->
+    <div id="flavorContent" class="main-content">
+        <div class="flavor-badge">Flavor of the Day</div>
+        <div id="flavorName" class="flavor-title">Loading...</div>
+        <div class="flavor-img-wrapper">
+            <img id="flavorImage" class="flavor-img" src="" alt="Flavor of the Day" style="display: none;" />
+        </div>
+    </div>
 
-<div id="locationNav">
-    <button id="prevBtn">&#8592;</button>
-    <div id="locationName"></div>
-    <button id="nextBtn">&#8594;</button>
-</div>
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-title">No Locations Saved</div>
+        <div class="empty-desc">Add your local Culver's to view today's fresh frozen custard flavor.</div>
+        <a href="options.html" target="_blank" class="btn-add">Find Location</a>
+    </div>
 
-<p><a href="options.html" target="_blank">&#9881; Settings</a></p>
+    <!-- Footer -->
+    <div id="popupFooter" class="footer">
+        <a id="calendarLink" href="https://www.culvers.com" target="_blank" class="calendar-link">
+            View Rest of Month ↗
+        </a>
+        <a href="options.html" target="_blank" class="settings-link">Settings</a>
+    </div>
 
-<script src="popup.js"></script>
+    <script src="popup.js"></script>
 </body>
 </html>
